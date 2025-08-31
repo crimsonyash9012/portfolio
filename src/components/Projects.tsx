@@ -20,8 +20,8 @@ const Projects = () => {
         "Personalized feed algorithm",
         "Follower/following system"
       ],
-      githubUrl: "https://github.com/crimsonyash9012",
-      liveUrl: "#",
+      githubUrl: "https://github.com/crimsonyash9012/Flappy",
+      liveUrl: "https://drive.google.com/drive/folders/12PD3qExy46y-QRQaLFUem3z-oqrH_ZL3?usp=sharing",
       color: "from-blue-500 to-purple-600"
     },
     {
@@ -37,8 +37,8 @@ const Projects = () => {
         "600+ coin tracking",
         "Market trends analysis"
       ],
-      githubUrl: "https://github.com/crimsonyash9012",
-      liveUrl: "#",
+      githubUrl: "https://github.com/crimsonyash9012/EasyCrypto",
+      liveUrl: "https://drive.google.com/drive/folders/12PD3qExy46y-QRQaLFUem3z-oqrH_ZL3?usp=sharing",
       color: "from-green-500 to-emerald-600"
     },
     {
@@ -55,8 +55,8 @@ const Projects = () => {
         "Cross-platform compatibility",
         "Chat-based planning interface"
       ],
-      githubUrl: "https://github.com/crimsonyash9012",
-      liveUrl: "#",
+      githubUrl: "https://github.com/crimsonyash9012/smart_trip_planner_flutter",
+      liveUrl: "https://drive.google.com/drive/folders/12PD3qExy46y-QRQaLFUem3z-oqrH_ZL3?usp=sharing",
       color: "from-orange-500 to-red-600"
     }
   ];

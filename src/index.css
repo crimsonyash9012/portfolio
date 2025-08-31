@@ -298,7 +298,15 @@
 
 @font-face {
   font-family: 'Bytebounce';
-  src: url('./assets/fonts/bytebounce.otf') format('opentype');
+  src: url('./assets/fonts/bytebounce.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Outlined';
+  src: url('./assets/fonts/outlined.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
   font-display: swap;

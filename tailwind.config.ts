@@ -23,6 +23,7 @@ const config: Config = {
 
         // ✅ add your custom font here
         bytebounce: ["Bytebounce", "sans-serif"],
+        outlined: ["Outlined", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
