@@ -30,7 +30,7 @@ const Contact = () => {
 
   // EmailJS credentials (consider moving to environment variables)
   const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_PUBLIC_EMAILJS_PUBLIC_KEY || "";
-  const EMAILJS_SERVICE_ID = import.meta.env.VITE_PUBLIC_EMAILJS_SERVUCE_ID || "";
+  const EMAILJS_SERVICE_ID = import.meta.env.VITE_PUBLIC_EMAILJS_SERVICE_ID || "";
   const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_PUBLIC_EMAILJS_TEMPLATE_ID || "";
 
   // Initialize EmailJS once
@@ -39,7 +39,7 @@ const Contact = () => {
   // }
 
   useEffect(()=>{
-    console.log("key is", EMAILJS_PUBLIC_KEY);
+    //console.log("key is", EMAILJS_PUBLIC_KEY);
     
     emailjs.init(EMAILJS_PUBLIC_KEY);
     // Mark as initialized to avoid re-init on re-renders
