@@ -46,7 +46,7 @@ const Projects = () => {
       description: "Cross-platform AI-powered travel planning application using advanced language models for intelligent itinerary generation and real-time recommendations.",
       period: "2025",
       status: "In Development",
-      technologies: ["Flutter", "Groq LLaMA", "Google Places API", "Isar DB", "Dart"],
+      technologies: ["Flutter", "Groq LLaMA", "Google Places API", "NodeJS", "TypeScript", "NestJS", "MongoDB Atlas"],
       features: [
         "AI-powered itinerary planning",
         "Real-time hotel/restaurant recommendations",
