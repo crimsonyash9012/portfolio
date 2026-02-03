@@ -55,7 +55,7 @@ const Projects = () => {
         "Cross-platform compatibility",
         "Chat-based planning interface"
       ],
-      githubUrl: "https://github.com/crimsonyash9012/smart_trip_planner_flutter",
+      githubUrl: "https://github.com/crimsonyash9012/smart_trip_planner_new",
       liveUrl: "https://drive.google.com/drive/folders/12PD3qExy46y-QRQaLFUem3z-oqrH_ZL3?usp=sharing",
       color: "from-orange-500 to-red-600"
     }
