@@ -898,42 +898,6 @@
   font-size: 14px;
 }
 
-.contact-form {
-  max-width: 580px;
-  margin-top: 29px;
-  padding-top: 19px;
-  border-top: 1px solid #f3f0e733;
-  display: grid;
-  gap: 12px;
-}
-
-.contact-form label {
-  display: grid;
-  gap: 5px;
-  font-size: 14px;
-}
-
-.contact-form input,
-.contact-form textarea {
-  border: 1px solid #f3f0e766;
-  padding: 9px 10px;
-  color: var(--chalk);
-  background: #171812;
-  font-size: 16px;
-}
-
-.contact-form textarea {
-  resize: vertical;
-}
-
-.contact-form button:disabled {
-  opacity: 0.6;
-}
-
-.contact-form [role="status"]:empty {
-  height: 0;
-}
-
 .portfolio-footer {
   padding: 14px var(--inset) 18px;
   border-top: 1px solid #f3f0e733;

@@ -1,59 +1,13 @@
-import { useState, type FormEvent } from "react";
-import emailjs from "@emailjs/browser";
 import { ArrowUpRight } from "lucide-react";
-
 import ScrollWords from "@/components/ScrollWords";
 
 const email = "yashkrgola9012@gmail.com";
-const emailSettings = {
-  publicKey: import.meta.env.VITE_PUBLIC_EMAILJS_PUBLIC_KEY,
-  serviceId: import.meta.env.VITE_PUBLIC_EMAILJS_SERVICE_ID,
-  templateId: import.meta.env.VITE_PUBLIC_EMAILJS_TEMPLATE_ID,
-};
 
 const profiles = [
   { name: "GitHub", url: "https://github.com/crimsonyash9012" },
   { name: "LinkedIn", url: "https://www.linkedin.com/in/yash-kumar-gola-480940282" },
   { name: "Upwork", url: "https://www.upwork.com/freelancers/~01d3b996bcec5064ad" },
 ];
-
-const ContactForm = () => {
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "failed">("idle");
-
-  const submit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const form = event.currentTarget;
-    const fields = Object.fromEntries(new FormData(form));
-    setStatus("sending");
-
-    try {
-      await emailjs.send(emailSettings.serviceId, emailSettings.templateId, fields, {
-        publicKey: emailSettings.publicKey,
-      });
-      form.reset();
-      setStatus("sent");
-    } catch {
-      setStatus("failed");
-    }
-  };
-
-  return (
-    <form className="contact-form" data-scroll-reveal="rise" onSubmit={submit}>
-      <label>Name<input name="from_name" autoComplete="name" required /></label>
-      <label>Email<input type="email" name="from_email" autoComplete="email" required /></label>
-      <label>Subject<input name="subject" required /></label>
-      <label>Message<textarea name="message" rows={4} required /></label>
-      <button className="text-link" type="submit" disabled={status === "sending"}>
-        {status === "sending" ? "Sending…" : "Send message"} <ArrowUpRight aria-hidden="true" />
-      </button>
-      <p role="status">
-        {status === "sent" && "Message sent."}
-        {status === "failed" && "Message could not be sent. Please use the email link above."}
-      </p>
-    </form>
-  );
-};
 
 const Contact = () => (
   <section id="contact" className="portfolio-section contact-section" aria-labelledby="contact-title">
@@ -87,7 +41,6 @@ const Contact = () => (
         </ul>
       </div>
     </div>
-    {emailSettings.publicKey && emailSettings.serviceId && emailSettings.templateId && <ContactForm />}
   </section>
 );
 
