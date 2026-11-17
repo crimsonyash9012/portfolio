@@ -1,102 +1,135 @@
-import { Button } from "@/components/ui/button";
-import { Github, Linkedin, Mail, ArrowDown } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { ArrowDown, ArrowUpRight } from "lucide-react";
+import { drawHeroMark } from "@/lib/portfolioMark";
+
+const beats = [
+  { text: "Start with the workflow.", start: 0.12, end: 0.38 },
+  { text: "Connect the moving parts.", start: 0.38, end: 0.65 },
+  { text: "Ship with tests in place.", start: 0.65, end: 0.94 },
+];
 
 const Hero = () => {
-  const scrollToContact = () => {
-    const element = document.getElementById("contact");
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-    }
-  };
+  const journey = useRef<HTMLElement>(null);
+  const stage = useRef<HTMLDivElement>(null);
+  const canvas = useRef<HTMLCanvasElement>(null);
+  const degrees = useRef<HTMLSpanElement>(null);
 
-  const scrollToAbout = () => {
-    const element = document.getElementById("about");
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-    }
-  };
+  useEffect(() => {
+    const section = journey.current;
+    const screen = stage.current;
+    const picture = canvas.current;
+    const counter = degrees.current;
+    if (!section || !screen || !picture || !counter) return;
+
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const pointer = { x: 0, y: 0 };
+    let frame = 0;
+    let lastProgress = -1;
+    let lastWidth = 0;
+    let lastHeight = 0;
+
+    const render = () => {
+      frame = 0;
+      const travel = section.offsetHeight - screen.offsetHeight;
+      const progress = travel > 0 && !reducedMotion.matches
+        ? Math.min(1, Math.max(0, (screen.getBoundingClientRect().top - section.getBoundingClientRect().top) / travel))
+        : 0;
+
+      if (progress !== lastProgress) {
+        screen.dataset.beat = String(progress < 0.12 ? 0 : progress < 0.38 ? 1 : progress < 0.65 ? 2 : 3);
+        screen.style.setProperty("--paper-reveal", String(Math.max(0, (progress - 0.88) / 0.12)));
+        screen.style.setProperty("--opening-opacity", String(Math.max(0, Math.min(1, (0.12 - progress) / 0.075))));
+        beats.forEach(({ start, end }, index) => {
+          const alpha = Math.max(0, Math.min(1, (progress - start) / 0.05, (end - progress) / 0.05));
+          screen.style.setProperty(`--beat-${index + 1}`, String(alpha));
+        });
+        counter.textContent = String(Math.round(progress * 180)).padStart(3, "0") + "°";
+        lastProgress = progress;
+      }
+
+      drawHeroMark(picture, progress, reducedMotion.matches ? { x: 0, y: 0 } : pointer);
+      lastWidth = picture.clientWidth;
+      lastHeight = picture.clientHeight;
+    };
+
+    const schedule = () => {
+      if (!frame) frame = window.requestAnimationFrame(render);
+    };
+
+    const scroll = () => {
+      const bounds = section.getBoundingClientRect();
+      if (bounds.bottom > 0 && bounds.top < window.innerHeight) schedule();
+    };
+
+    const move = (event: PointerEvent) => {
+      if (reducedMotion.matches || event.pointerType === "touch") return;
+      const rect = screen.getBoundingClientRect();
+      pointer.x = ((event.clientX - rect.left) / rect.width - 0.5) * 2;
+      pointer.y = ((event.clientY - rect.top) / rect.height - 0.5) * 2;
+      schedule();
+    };
+
+    const leave = () => {
+      pointer.x = 0;
+      pointer.y = 0;
+      schedule();
+    };
+
+    const resize = new ResizeObserver(() => {
+      if (picture.clientWidth !== lastWidth || picture.clientHeight !== lastHeight) schedule();
+    });
+    resize.observe(picture);
+    screen.addEventListener("pointermove", move);
+    screen.addEventListener("pointerleave", leave);
+    window.addEventListener("scroll", scroll, { capture: true, passive: true });
+    reducedMotion.addEventListener("change", schedule);
+    render();
+
+    return () => {
+      resize.disconnect();
+      screen.removeEventListener("pointermove", move);
+      screen.removeEventListener("pointerleave", leave);
+      window.removeEventListener("scroll", scroll, true);
+      reducedMotion.removeEventListener("change", schedule);
+      window.cancelAnimationFrame(frame);
+    };
+  }, []);
 
   return (
-    <section id="home" className="min-h-screen flex items-center justify-center relative overflow-hidden bg-gradient-hero">
-      {/* Spline 3D Background */}
-      <div className="absolute inset-0 z-0">
-        <iframe 
-          src='https://my.spline.design/orb-nM45AYjaUCpjamRKehntczJR/' 
-          frameBorder='0' 
-          width='100%' 
-          height='100%'
-          className="w-full h-full opacity-60"
-          title="3D Background Design"
-        />
-      </div>
-      
-      {/* Background mesh gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-mesh opacity-30 z-1"></div>
-      
-      {/* Animated background elements */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-glow opacity-15 animate-float-slow z-2"></div>
-      <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-gradient-glow opacity-10 animate-float-slow z-2" style={{ animationDelay: "2s" }}></div>
-      <div className="absolute top-1/2 right-1/3 w-32 h-32 bg-gradient-glow opacity-8 animate-float z-2" style={{ animationDelay: "4s" }}></div>
-      
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 text-center relative z-10">
-        <div className="max-w-4xl mx-auto">
-          {/* Main Content */}
-          <div className="space-y-8">
-            <h1 className="font-outlined text-5xl sm:text-6xl md:text-7xl lg:text-8xl leading-tight animate-fade-in-up">
-              <span className="bg-gradient-crimson bg-clip-text text-transparent animate-fade-in-up">Yash kumar golA</span>
-            </h1>
-            
-            <p className="font-bytebounce text-lg sm:text-xl md:text-2xl text-muted-foreground font-light animate-fade-in-up stagger-delay-3">
-              Android Developer  •  Machine Learning Enthusiast
-            </p>
-            
-            <p className="font-bytebounce text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed animate-fade-in-up stagger-delay-4 px-4">
-              Passionate B.Tech CSE student at DTU crafting innovative Android applications 
-              and exploring the frontiers of Machine Learning
-            </p>
+    <section className="hero-journey" id="home" ref={journey} aria-labelledby="hero-title">
+      <div className="hero-stage" ref={stage} data-beat="0">
+        <canvas className="hero-canvas" ref={canvas} aria-hidden="true" />
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8 animate-fade-in-up stagger-delay-5 px-4">
-              <Button variant="hero" size="lg" onClick={scrollToContact} className="hover:shadow-glow">
-                Get In Touch
-              </Button>
-              <Button variant="outline-hero" size="lg" onClick={scrollToAbout} className="hover:shadow-glow">
-                Learn More
-              </Button>
-            </div>
-
-            {/* Social Links */}
-            <div className="flex justify-center space-x-4 sm:space-x-6 pt-8 animate-fade-in-up stagger-delay-6">
-              <a 
-                href="https://github.com/crimsonyash9012" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="p-2 sm:p-3 rounded-full bg-card/20 backdrop-blur-sm border border-border/30 hover:bg-primary/20 hover:border-primary/50 hover:scale-110 transition-all duration-500 hover:shadow-crimson"
-              >
-                <Github className="h-5 w-5 sm:h-6 sm:w-6" />
-              </a>
-              <a 
-                href="https://linkedin.com/in/yash-kumar-gola-480940282" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="p-2 sm:p-3 rounded-full bg-card/20 backdrop-blur-sm border border-border/30 hover:bg-primary/20 hover:border-primary/50 hover:scale-110 transition-all duration-500 hover:shadow-crimson"
-              >
-                <Linkedin className="h-5 w-5 sm:h-6 sm:w-6" />
-              </a>
-              <a 
-                href="mailto:yashkrgola9012@gmail.com"
-                className="p-2 sm:p-3 rounded-full bg-card/20 backdrop-blur-sm border border-border/30 hover:bg-primary/20 hover:border-primary/50 hover:scale-110 transition-all duration-500 hover:shadow-crimson"
-              >
-                <Mail className="h-5 w-5 sm:h-6 sm:w-6" />
-              </a>
-            </div>
-          </div>
+        <div className="hero-meta">
+          <p>Full-stack developer</p>
+          <p>Delhi, India · UTC+5:30</p>
         </div>
 
-        {/* Scroll Indicator */}
-        <div className="absolute bottom-4 sm:bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-          <ArrowDown className="h-5 w-5 sm:h-6 sm:w-6 text-primary animate-glow-pulse" />
+        <h1 className="hero-display hero-opening" id="hero-title">
+          <span className="sr-only">Yash Kumar Gola. </span>
+          <span className="hero-line hero-line-start">I design systems.</span>{" "}
+          <span className="hero-line hero-line-end">I build them.</span>
+        </h1>
+
+        <div className="hero-beats" aria-hidden="true">
+          {beats.map(({ text }, index) => (
+            <p className="hero-beat" data-line={index + 1} key={text}>{text}</p>
+          ))}
         </div>
+
+        <p className="hero-statement hero-opening">
+          I’m Yash Kumar Gola. I build web apps and APIs for AI and research workflows.
+        </p>
+
+        <a className="hero-scroll" href="#projects">
+          <span className="hero-degrees" ref={degrees} aria-hidden="true">000°</span>
+          <span>Scroll to explore <ArrowDown aria-hidden="true" /></span>
+        </a>
+
+        <a className="pill pill-filled hero-cta" href="#contact">
+          Get in touch <ArrowUpRight aria-hidden="true" />
+        </a>
+        <div className="hero-paper-reveal" aria-hidden="true" />
       </div>
     </section>
   );
