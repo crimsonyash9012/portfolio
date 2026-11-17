@@ -153,7 +153,7 @@ const wireframes = Array.from({ length: 7 }, (_, index) => {
   const scale = 0.64 - fraction * 0.48;
   return {
     depth: focalLength / scale,
-    offset: (0.44 + fraction * 0.56) / scale,
+    openingOffset: 0.44 + fraction * 0.56,
     turn: -0.18 - fraction * 0.75,
     yaw: -0.26 - fraction * 0.7,
     opacity: 0.29 + 0.2 * fraction,
@@ -161,8 +161,6 @@ const wireframes = Array.from({ length: 7 }, (_, index) => {
 }).reverse();
 
 const [furthestWire] = wireframes;
-const nearestWire = wireframes[wireframes.length - 1];
-const trailSlope = (furthestWire.offset - nearestWire.offset) / (furthestWire.depth - nearestWire.depth);
 
 function easedRange(value: number, start: number, end: number) {
   const fraction = Math.min(1, Math.max(0, (value - start) / (end - start)));
@@ -215,12 +213,9 @@ export function drawHeroMark(
   const trailX = (small ? 1.33 : 1.88) + pointer.x * 0.37 * mouseInfluence;
   const trailY = -1.21 + pointer.y * 0.35 * mouseInfluence;
   const cameraDepth = progress * (furthestWire.depth - nearPlane);
-  // Move onto the same line as the wireframes and center its vanishing point as we approach.
-  const cameraOffset = Math.max(0, nearestWire.offset + (cameraDepth - nearestWire.depth) * trailSlope)
-    * easedRange(progress, 0.04, 0.42);
-  const aim = focalLength * trailSlope * easedRange(progress, 0.015, 0.46);
+  // Center the trail independently of its depth zoom so approaching layers cannot drift outward.
+  const trailSeparation = Math.max(0, 1 - progress / 0.22) ** 2;
   const turnTowardTrail = 0.48 * easedRange(progress, 0.12, 0.55);
-  const projectedOffset = (offset: number, scale: number) => (offset - cameraOffset) * scale - aim;
   const pose = {
     x: width / 2,
     y: height * (small ? 0.48 : 0.5),
@@ -229,13 +224,16 @@ export function drawHeroMark(
     tilt: 0.015 + pointer.y * 0.12 * mouseInfluence,
     yaw: -0.24 + pointer.x * 0.17 * mouseInfluence,
   };
+  const trailPosition = (offset: number) => ({
+    x: pose.x + trailX * size * offset,
+    y: pose.y + trailY * size * offset,
+  });
 
-  const lightScale = focalLength / Math.max(nearPlane, furthestWire.depth - cameraDepth);
-  const lightOffset = projectedOffset(furthestWire.offset, lightScale);
+  const light = trailPosition(trailSeparation);
   drawLight(
     context,
-    pose.x + trailX * size * lightOffset,
-    pose.y + trailY * size * lightOffset,
+    light.x,
+    light.y,
     size * (1.06 + progress * 0.42),
     0.94 - progress * 0.24,
   );
@@ -244,13 +242,11 @@ export function drawHeroMark(
     const distance = wire.depth - cameraDepth;
     if (distance <= nearPlane) continue;
     const scale = focalLength / distance;
-    const offset = projectedOffset(wire.offset, scale);
     const opacity = easedRange(distance, nearPlane, 1.6)
       * (wire.opacity + easedRange(progress, 0.04, 0.28) * 0.27);
     drawWire(context, {
       ...pose,
-      x: pose.x + trailX * size * offset,
-      y: pose.y + trailY * size * offset,
+      ...trailPosition(wire.openingOffset * trailSeparation),
       size: size * scale,
       turn: pose.turn + wire.turn,
       yaw: pose.yaw + wire.yaw + turnTowardTrail,
@@ -260,11 +256,9 @@ export function drawHeroMark(
   const solidDistance = focalLength - cameraDepth;
   if (solidDistance > nearPlane) {
     const scale = focalLength / solidDistance;
-    const offset = projectedOffset(0, scale);
     drawSolid(context, {
       ...pose,
-      x: pose.x + trailX * size * offset,
-      y: pose.y + trailY * size * offset,
+      ...trailPosition(-0.16 * (1 - trailSeparation)),
       size: size * scale,
     }, easedRange(solidDistance, nearPlane, 1.7));
   }
