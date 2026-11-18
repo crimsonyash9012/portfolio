@@ -1,14 +1,15 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type RefObject } from "react";
 import { ArrowDown, ArrowUpRight } from "lucide-react";
+import { desktopPortfolioQuery } from "@/hooks/useScrollAnimation";
 import { drawHeroMark } from "@/lib/portfolioMark";
 
 const beats = [
   { text: "Start with the workflow.", start: 0.12, end: 0.38 },
   { text: "Connect the moving parts.", start: 0.38, end: 0.65 },
-  { text: "Ship with tests in place.", start: 0.65, end: 0.94 },
+  { text: "Ship with tests in place.", start: 0.65, end: 1 },
 ];
 
-const Hero = () => {
+const Hero = ({ viewportRef }: { viewportRef: RefObject<HTMLDivElement> }) => {
   const journey = useRef<HTMLElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -19,8 +20,10 @@ const Hero = () => {
     const screen = stage.current;
     const picture = canvas.current;
     const counter = degrees.current;
-    if (!section || !screen || !picture || !counter) return;
+    const viewport = viewportRef.current;
+    if (!section || !screen || !picture || !counter || !viewport) return;
 
+    const desktop = window.matchMedia(desktopPortfolioQuery);
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     const pointer = { x: 0, y: 0 };
     let frame = 0;
@@ -30,20 +33,26 @@ const Hero = () => {
 
     const render = () => {
       frame = 0;
-      const travel = section.offsetHeight - screen.offsetHeight;
-      const progress = travel > 0 && !reducedMotion.matches
-        ? Math.min(1, Math.max(0, (screen.getBoundingClientRect().top - section.getBoundingClientRect().top) / travel))
-        : 0;
+      const stageHeight = screen.offsetHeight;
+      const scrollTop = desktop.matches ? viewport.getBoundingClientRect().top : 0;
+      const distance = scrollTop - section.getBoundingClientRect().top;
+      const pinnedDistance = section.offsetHeight - stageHeight;
+      // Finish the turn while the first part of Selected Work scrolls into view.
+      const travel = pinnedDistance + stageHeight * 0.34;
+      const progress = pinnedDistance > 0 && !reducedMotion.matches
+        ? Math.min(1, Math.max(0, distance / travel)) : 0;
 
       if (progress !== lastProgress) {
         screen.dataset.beat = String(progress < 0.12 ? 0 : progress < 0.38 ? 1 : progress < 0.65 ? 2 : 3);
-        screen.style.setProperty("--paper-reveal", String(Math.max(0, (progress - 0.88) / 0.12)));
         screen.style.setProperty("--opening-opacity", String(Math.max(0, Math.min(1, (0.12 - progress) / 0.075))));
         beats.forEach(({ start, end }, index) => {
-          const alpha = Math.max(0, Math.min(1, (progress - start) / 0.05, (end - progress) / 0.05));
+          const fadeOut = end < 1 ? (end - progress) / 0.05 : 1;
+          const alpha = Math.max(0, Math.min(1, (progress - start) / 0.05, fadeOut));
           screen.style.setProperty(`--beat-${index + 1}`, String(alpha));
         });
-        counter.textContent = String(Math.round(progress * 180)).padStart(3, "0") + "°";
+        const angle = progress === 1 ? 180 : Math.floor(progress * 180);
+        const label = `${String(angle).padStart(3, "0")}°`;
+        if (counter.textContent !== label) counter.textContent = label;
         lastProgress = progress;
       }
 
@@ -82,6 +91,7 @@ const Hero = () => {
     screen.addEventListener("pointermove", move);
     screen.addEventListener("pointerleave", leave);
     window.addEventListener("scroll", scroll, { capture: true, passive: true });
+    desktop.addEventListener("change", schedule);
     reducedMotion.addEventListener("change", schedule);
     render();
 
@@ -90,10 +100,11 @@ const Hero = () => {
       screen.removeEventListener("pointermove", move);
       screen.removeEventListener("pointerleave", leave);
       window.removeEventListener("scroll", scroll, true);
+      desktop.removeEventListener("change", schedule);
       reducedMotion.removeEventListener("change", schedule);
       window.cancelAnimationFrame(frame);
     };
-  }, []);
+  }, [viewportRef]);
 
   return (
     <section className="hero-journey" id="home" ref={journey} aria-labelledby="hero-title">
@@ -129,7 +140,6 @@ const Hero = () => {
         <a className="pill pill-filled hero-cta" href="#contact">
           Get in touch <ArrowUpRight aria-hidden="true" />
         </a>
-        <div className="hero-paper-reveal" aria-hidden="true" />
       </div>
     </section>
   );

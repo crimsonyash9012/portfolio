@@ -1,6 +1,6 @@
 import { useEffect, type RefObject } from "react";
 
-const desktopLayout = "(min-width: 761px)";
+export const desktopPortfolioQuery = "(min-width: 761px)";
 const prefersReducedMotion = "(prefers-reduced-motion: reduce)";
 
 export function useScrollAnimation(viewportRef: RefObject<HTMLDivElement>) {
@@ -9,7 +9,7 @@ export function useScrollAnimation(viewportRef: RefObject<HTMLDivElement>) {
     if (!viewport || !("IntersectionObserver" in window)) return;
 
     const targets = [...viewport.querySelectorAll<HTMLElement>("[data-scroll-reveal]")];
-    const desktop = window.matchMedia(desktopLayout);
+    const desktop = window.matchMedia(desktopPortfolioQuery);
     const reducedMotion = window.matchMedia(prefersReducedMotion);
     let observer: IntersectionObserver | undefined;
 
@@ -63,7 +63,7 @@ export function useSmoothPortfolioScroll(viewportRef: RefObject<HTMLDivElement>)
     const frame = viewport?.parentElement;
     if (!viewport || !frame) return;
 
-    const desktop = window.matchMedia(desktopLayout);
+    const desktop = window.matchMedia(desktopPortfolioQuery);
     const reducedMotion = window.matchMedia(prefersReducedMotion);
     let animationFrame = 0;
     let goal = 0;

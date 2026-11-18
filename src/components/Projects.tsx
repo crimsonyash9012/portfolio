@@ -1,7 +1,6 @@
 import { useRef } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { ArrowRight, ArrowUpRight, X } from "lucide-react";
-import ScrollWords from "@/components/ScrollWords";
 import oasisPreview from "@/assets/oasis-preview.webp";
 
 const projects = [
@@ -116,7 +115,7 @@ function ProjectRow({ project }: { project: Project }) {
 const Projects = () => (
   <section id="projects" className="portfolio-section work-section" aria-labelledby="projects-title">
     <div className="section-heading">
-      <h2 className="section-title" id="projects-title"><ScrollWords>Selected work.</ScrollWords></h2>
+      <h2 className="section-title" id="projects-title">Selected work.</h2>
       <p data-scroll-reveal="rise">Two projects across AI and research software. Open a project to see how it works.</p>
     </div>
 

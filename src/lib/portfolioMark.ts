@@ -18,19 +18,28 @@ type Pose = {
   yaw: number;
 };
 
-function project(x: number, y: number, z: number, pose: Pose): Point {
-  const rolledX = x * Math.cos(pose.turn) - y * Math.sin(pose.turn);
-  const rolledY = x * Math.sin(pose.turn) + y * Math.cos(pose.turn);
-  const turnedX = rolledX * Math.cos(pose.yaw) + z * Math.sin(pose.yaw);
-  const turnedZ = z * Math.cos(pose.yaw) - rolledX * Math.sin(pose.yaw);
-  const tiltedY = rolledY * Math.cos(pose.tilt) - turnedZ * Math.sin(pose.tilt);
-  const tiltedZ = rolledY * Math.sin(pose.tilt) + turnedZ * Math.cos(pose.tilt);
-  const perspective = 7 / (7 - tiltedZ);
+function createProjector(pose: Pose) {
+  const cosTurn = Math.cos(pose.turn);
+  const sinTurn = Math.sin(pose.turn);
+  const cosYaw = Math.cos(pose.yaw);
+  const sinYaw = Math.sin(pose.yaw);
+  const cosTilt = Math.cos(pose.tilt);
+  const sinTilt = Math.sin(pose.tilt);
 
-  return {
-    x: pose.x + turnedX * pose.size * perspective,
-    y: pose.y + tiltedY * pose.size * perspective,
-    z: tiltedZ,
+  return (x: number, y: number, z: number): Point => {
+    const rolledX = x * cosTurn - y * sinTurn;
+    const rolledY = x * sinTurn + y * cosTurn;
+    const turnedX = rolledX * cosYaw + z * sinYaw;
+    const turnedZ = z * cosYaw - rolledX * sinYaw;
+    const tiltedY = rolledY * cosTilt - turnedZ * sinTilt;
+    const tiltedZ = rolledY * sinTilt + turnedZ * cosTilt;
+    const perspective = 7 / (7 - tiltedZ);
+
+    return {
+      x: pose.x + turnedX * pose.size * perspective,
+      y: pose.y + tiltedY * pose.size * perspective,
+      z: tiltedZ,
+    };
   };
 }
 
@@ -51,9 +60,10 @@ function surfaceArea(points: Point[]) {
 }
 
 function drawSolid(context: CanvasRenderingContext2D, pose: Pose, alpha: number) {
+  const project = createProjector(pose);
   const faces = profiles.flatMap((profile) => {
-    const front = profile.map(([x, y]) => project(x, y, depth / 2, pose));
-    const back = profile.map(([x, y]) => project(x, y, -depth / 2, pose));
+    const front = profile.map(([x, y]) => project(x, y, depth / 2));
+    const back = profile.map(([x, y]) => project(x, y, -depth / 2));
     const face = { points: front, color: "" };
     const sides = front.map((point, index) => {
       const next = (index + 1) % profile.length;
@@ -92,16 +102,20 @@ function drawSolid(context: CanvasRenderingContext2D, pose: Pose, alpha: number)
   context.restore();
 }
 
-function grid(context: CanvasRenderingContext2D, pose: Pose, palette: "light" | "dark") {
+function grid(
+  context: CanvasRenderingContext2D,
+  project: ReturnType<typeof createProjector>,
+  palette: "light" | "dark",
+) {
   context.save();
   context.strokeStyle = palette === "dark" ? "#efeee522" : "#2426221b";
   context.lineWidth = 0.65;
   context.beginPath();
   for (let i = -1.4; i <= 1.41; i += 0.14) {
-    const a = project(i, -1.4, depth / 2, pose);
-    const b = project(i, 1.4, depth / 2, pose);
-    const c = project(-1.4, i, depth / 2, pose);
-    const d = project(1.4, i, depth / 2, pose);
+    const a = project(i, -1.4, depth / 2);
+    const b = project(i, 1.4, depth / 2);
+    const c = project(-1.4, i, depth / 2);
+    const d = project(1.4, i, depth / 2);
     context.moveTo(a.x, a.y);
     context.lineTo(b.x, b.y);
     context.moveTo(c.x, c.y);
@@ -117,12 +131,13 @@ function drawWire(
   alpha: number,
   palette: "light" | "dark",
 ) {
+  const project = createProjector(pose);
   context.save();
   context.globalAlpha = alpha;
   context.strokeStyle = palette === "dark" ? "#e5e5d9" : "#32362e";
   profiles.forEach((profile) => {
-    const front = profile.map(([x, y]) => project(x, y, depth / 2, pose));
-    const back = profile.map(([x, y]) => project(x, y, -depth / 2, pose));
+    const front = profile.map(([x, y]) => project(x, y, depth / 2));
+    const back = profile.map(([x, y]) => project(x, y, -depth / 2));
     context.lineWidth = 0.65;
     trace(context, back);
     context.stroke();
@@ -139,7 +154,7 @@ function drawWire(
     context.stroke();
     context.save();
     context.clip();
-    grid(context, pose, palette);
+    grid(context, project, palette);
     context.restore();
   });
   context.restore();
@@ -208,13 +223,18 @@ export function drawHeroMark(
 
   const { context, width, height } = surface;
   const small = width < 690;
-  const size = Math.min(height * (small ? 0.194 : 0.264), width * (small ? 0.34 : 0.18));
+  const openingLimit = small && width < height ? Math.max(1, height * 0.26 - 48) : Infinity;
+  const size = Math.min(height * (small ? 0.194 : 0.264), width * (small ? 0.34 : 0.18), openingLimit);
+  const wireSizeLimit = Math.min(width * (small ? 0.46 : 0.43), height * (small ? 0.37 : 0.66));
   const mouseInfluence = 1 - easedRange(progress, 0.01, 0.38);
   const trailX = (small ? 1.33 : 1.88) + pointer.x * 0.37 * mouseInfluence;
   const trailY = -1.21 + pointer.y * 0.35 * mouseInfluence;
-  const cameraDepth = progress * (furthestWire.depth - nearPlane);
+  // Leave the final layer visible at the end of the turn.
+  const cameraDepth = progress * (furthestWire.depth - focalLength * 0.7);
   // Center the trail independently of its depth zoom so approaching layers cannot drift outward.
   const trailSeparation = Math.max(0, 1 - progress / 0.22) ** 2;
+  // The 0–180° readout represents one complete on-screen revolution.
+  const rotation = -2 * Math.PI * progress;
   const turnTowardTrail = 0.48 * easedRange(progress, 0.12, 0.55);
   const pose = {
     x: width / 2,
@@ -241,16 +261,22 @@ export function drawHeroMark(
   for (const wire of wireframes) {
     const distance = wire.depth - cameraDepth;
     if (distance <= nearPlane) continue;
-    const scale = focalLength / distance;
+    const zoomedSize = size * focalLength / distance;
     const opacity = easedRange(distance, nearPlane, 1.6)
       * (wire.opacity + easedRange(progress, 0.04, 0.28) * 0.27);
+    const center = trailPosition(wire.openingOffset * trailSeparation);
+    context.save();
+    context.translate(center.x, center.y);
+    context.rotate(rotation);
     drawWire(context, {
       ...pose,
-      ...trailPosition(wire.openingOffset * trailSeparation),
-      size: size * scale,
-      turn: pose.turn + wire.turn,
+      x: 0,
+      y: 0,
+      size: wireSizeLimit * Math.tanh(zoomedSize / wireSizeLimit),
+      turn: wire.turn,
       yaw: pose.yaw + wire.yaw + turnTowardTrail,
     }, opacity, "dark");
+    context.restore();
   }
 
   const solidDistance = focalLength - cameraDepth;

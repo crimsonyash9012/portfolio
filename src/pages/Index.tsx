@@ -22,7 +22,7 @@ const Index = () => {
       <div className="portfolio" role="region" aria-label="Portfolio" tabIndex={0} ref={viewport}>
         <Navigation />
         <main id="main" tabIndex={-1}>
-          <Hero />
+          <Hero viewportRef={viewport} />
           <Projects />
           <About />
           <Experience />
