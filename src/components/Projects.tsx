@@ -1,9 +1,24 @@
 import { useRef } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { ArrowRight, ArrowUpRight, X } from "lucide-react";
+import codeTracerPreview from "@/assets/codetracer-preview.webp";
 import oasisPreview from "@/assets/oasis-preview.webp";
+import stakeStockPreview from "@/assets/stakestock-preview.webp";
 
-const projects = [
+type Project = {
+  id: string;
+  name: string;
+  kind: string;
+  summary: string;
+  description: string;
+  detail: string;
+  stack?: string;
+  action: string;
+  href: string;
+  image?: { src: string; alt: string; width: number; height: number };
+};
+
+const projects: Project[] = [
   {
     id: "atlas",
     name: "Human Atlas",
@@ -25,16 +40,52 @@ const projects = [
     stack: "FastAPI / PostgreSQL / Celery / Redis / Docker",
     action: "Read client feedback",
     href: "#testimonial",
+    image: {
+      src: oasisPreview,
+      alt: "OASIS landing page with its evidence synthesis dashboard",
+      width: 1468,
+      height: 715,
+    },
   },
-] as const;
-
-type Project = typeof projects[number];
+  {
+    id: "codetracer",
+    name: "CodeTracer",
+    kind: "Web app",
+    summary: "Algorithm practice and interactive visualizations",
+    description: "A platform for practicing data structures and algorithms with coding problems, step-by-step visualizations, and an AI coach that guides learners with questions.",
+    detail: "Learners can create timed private contests with friends, choose problems by difficulty, and compare scores on a leaderboard.",
+    action: "Open live demo",
+    href: "https://codetracer.up.railway.app/",
+    image: {
+      src: codeTracerPreview,
+      alt: "CodeTracer’s coding practice landing page",
+      width: 1280,
+      height: 800,
+    },
+  },
+  {
+    id: "stakestock",
+    name: "StakeStock",
+    kind: "Web app",
+    summary: "Virtual trading for IPL players",
+    description: "A simulated stock market for Indian Premier League players. Users can buy, sell, and short player stocks using in-game coins.",
+    detail: "The trading desk tracks player prices, orders, open positions, holdings, and portfolio profit and loss.",
+    action: "Open live demo",
+    href: "https://playerstock.up.railway.app/login",
+    image: {
+      src: stakeStockPreview,
+      alt: "StakeStock landing page with example IPL player prices",
+      width: 1280,
+      height: 800,
+    },
+  },
+];
 
 function ProjectVisual({ project }: { project: Project }) {
-  if (project.id === "oasis") {
+  if (project.image) {
     return (
-      <div className="project-visual oasis-visual">
-        <img src={oasisPreview} alt="OASIS landing page with its evidence synthesis dashboard" width="1468" height="715" loading="lazy" />
+      <div className="project-visual project-screenshot">
+        <img {...project.image} loading="lazy" />
       </div>
     );
   }
@@ -56,6 +107,7 @@ function ProjectVisual({ project }: { project: Project }) {
 
 function ProjectRow({ project }: { project: Project }) {
   const navigatingToFeedback = useRef(false);
+  const externalLink = !project.href.startsWith("#");
 
   const restoreFocus = (event: Event) => {
     if (!navigatingToFeedback.current) return;
@@ -91,8 +143,8 @@ function ProjectRow({ project }: { project: Project }) {
                 <Dialog.Title className="section-title">{project.name}</Dialog.Title>
                 <Dialog.Description>{project.description}</Dialog.Description>
                 <p>{project.detail}</p>
-                <p className="small-label">{project.stack}</p>
-                {project.id === "atlas" ? (
+                {project.stack && <p className="small-label">{project.stack}</p>}
+                {externalLink ? (
                   <a className="text-link" href={project.href} target="_blank" rel="noopener noreferrer">
                     {project.action} <ArrowUpRight aria-hidden="true" />
                   </a>
@@ -116,7 +168,7 @@ const Projects = () => (
   <section id="projects" className="portfolio-section work-section" aria-labelledby="projects-title">
     <div className="section-heading">
       <h2 className="section-title" id="projects-title">Selected work.</h2>
-      <p data-scroll-reveal="rise">Two projects across AI and research software. Open a project to see how it works.</p>
+      <p data-scroll-reveal="rise">Projects in AI, research software, coding education, and virtual trading.</p>
     </div>
 
     <ul className="project-index">

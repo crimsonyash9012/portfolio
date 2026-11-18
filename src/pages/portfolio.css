@@ -518,12 +518,12 @@
   border-left: 1px dashed #94947c;
 }
 
-.oasis-visual {
+.project-screenshot {
   aspect-ratio: auto;
   border-radius: 5px;
 }
 
-.oasis-visual img {
+.project-screenshot img {
   width: 100%;
   height: auto;
 }
@@ -629,6 +629,10 @@
 .experience-entry li {
   font-size: clamp(14px, 1.15cqw, 17px);
   line-height: 1.5;
+}
+
+.experience-certificate {
+  margin-top: 8px;
 }
 
 .blueprint-control {
